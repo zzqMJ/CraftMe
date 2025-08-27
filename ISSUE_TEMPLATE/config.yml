@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 📧 邮件支持
+    url: mailto:ailshie2022@163.com
+    about: 通过邮件联系我们获取技术支持
+  - name: 💬 用户社区
+    url: https://github.com/yourusername/CraftMe/discussions
+    about: 在社区中与其他用户交流和讨论
+  - name: 📖 使用文档
+    url: https://github.com/yourusername/CraftMe/wiki
+    about: 查看详细的使用文档和常见问题解答
+  - name: 🔄 版本更新
+    url: https://github.com/yourusername/CraftMe/releases
+    about: 查看最新版本和更新日志

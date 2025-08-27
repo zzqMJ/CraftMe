@@ -1,0 +1,134 @@
+name: Issue Management
+
+on:
+  issues:
+    types: [opened, edited, labeled]
+  issue_comment:
+    types: [created]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Auto-label new issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = issue.title.toLowerCase();
+            const body = issue.body.toLowerCase();
+            
+            // Auto-label based on title and content
+            const labels = [];
+            
+            if (title.includes('[bug]') || body.includes('bug') || body.includes('错误')) {
+              labels.push('bug');
+            }
+            
+            if (title.includes('[performance]') || body.includes('performance') || body.includes('卡顿') || body.includes('崩溃')) {
+              labels.push('performance');
+            }
+            
+            if (title.includes('[support]') || body.includes('support') || body.includes('帮助')) {
+              labels.push('support');
+            }
+            
+            if (title.includes('[feature]') || body.includes('feature') || body.includes('功能')) {
+              labels.push('enhancement');
+            }
+            
+            // Priority labels
+            if (body.includes('高优先级') || body.includes('紧急') || body.includes('崩溃')) {
+              labels.push('priority-high');
+            } else if (body.includes('中优先级') || body.includes('一般')) {
+              labels.push('priority-medium');
+            } else if (body.includes('低优先级') || body.includes('不急')) {
+              labels.push('priority-low');
+            }
+            
+            // Component labels
+            if (body.includes('头像生成') || body.includes('avatar generation')) {
+              labels.push('component-generation');
+            }
+            
+            if (body.includes('图片预览') || body.includes('image preview')) {
+              labels.push('component-preview');
+            }
+            
+            if (body.includes('历史记录') || body.includes('history')) {
+              labels.push('component-history');
+            }
+            
+            if (body.includes('订阅') || body.includes('付费') || body.includes('subscription')) {
+              labels.push('component-subscription');
+            }
+            
+            if (labels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labels
+              });
+            }
+
+  welcome-comment:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
+    steps:
+      - name: Welcome new contributors
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            
+            const welcomeMessage = `👋 感谢您提交 Issue！
+            
+我们已经收到您的反馈，团队会尽快处理。在此期间：
+
+📋 **请确保您已提供**：
+- 详细的设备信息（设备型号、iOS版本、应用版本）
+- 清晰的问题描述和复现步骤
+- 相关的截图或视频（如果适用）
+
+⏰ **预期响应时间**：
+- 🔴 紧急问题：24小时内响应
+- 🟡 一般问题：2-3个工作日响应
+- 🟢 功能建议：1周内响应
+
+📞 **其他联系方式**：
+- 邮件支持：support@emojiavatar.com
+- 社区讨论：[GitHub Discussions](https://github.com/${context.repo.owner}/${context.repo.repo}/discussions)
+
+感谢您帮助我们改进 EmojiAvatar！🎨`;
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: welcomeMessage
+            });
+
+  stale-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            👋 这个 Issue 已经 30 天没有活动了。
+            
+            如果问题仍然存在，请回复此消息让我们知道。
+            如果问题已解决，我们将在 7 天后自动关闭此 Issue。
+            
+            感谢您的理解！
+          close-issue-message: |
+            🔒 由于长时间没有活动，此 Issue 已被自动关闭。
+            
+            如果问题仍然存在，请创建新的 Issue。
+            感谢您的贡献！
+          stale-issue-label: 'stale'
+          days-before-stale: 30
+          days-before-close: 7
+          exempt-issue-labels: 'pinned,security,enhancement'
